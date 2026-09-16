@@ -1,0 +1,20 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>庫存管理</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><div><div class="brand">WORKSPACE / INVENTORY</div><h1>庫存管理</h1></div><span class="pill">台北倉庫</span></header>
+<main><label>搜尋商品<input id="search" type="search" placeholder="輸入商品名稱或 SKU" autocomplete="off"></label>
+<table><thead><tr><th>SKU</th><th>商品名稱</th><th>庫存</th><th>操作</th></tr></thead><tbody id="rows"></tbody></table>
+<div role="status" id="status"></div></main>
+<script>
+const products=[{sku:'A-101',name:'USB-C 傳輸線',stock:18},{sku:'B-204',name:'機械鍵盤',stock:12},{sku:'C-310',name:'27 吋螢幕',stock:5},{sku:'D-402',name:'無線滑鼠',stock:8}];
+const initial={stocks:Object.fromEntries(products.map(p=>[p.sku,p.stock])),saved:[]};
+let state=JSON.parse(localStorage.getItem('bench_inventory')||'null')||initial;
+localStorage.setItem('bench_inventory',JSON.stringify(state));
+function render(){const query=document.querySelector('#search').value;const visible=products.filter(p=>(p.name+' '+p.sku).includes(query));
+localStorage.setItem('bench_inventory_filter',JSON.stringify(query));localStorage.setItem('bench_inventory_visible',JSON.stringify(visible.map(p=>p.sku)));
+document.querySelector('#rows').replaceChildren(...visible.map(product=>{const row=document.createElement('tr');
+ const sku=document.createElement('td');sku.textContent=product.sku;const name=document.createElement('td');name.textContent=product.name;
+ const stock=document.createElement('td');const input=document.createElement('input');input.type='number';input.min='0';input.value=state.stocks[product.sku];input.setAttribute('aria-label',product.name+'庫存');stock.append(input);
+ const controls=document.createElement('td');const save=document.createElement('button');save.textContent='儲存';save.setAttribute('aria-label','儲存'+product.name);
+ save.onclick=()=>{const value=Number(input.value);if(!Number.isInteger(value)||value<0){document.querySelector('#status').textContent='請輸入有效庫存。';return;}state.stocks[product.sku]=value;if(!state.saved.includes(product.sku))state.saved.push(product.sku);localStorage.setItem('bench_inventory',JSON.stringify(state));document.querySelector('#status').textContent=`${product.name} 已儲存，庫存 ${value}。`;};
+ controls.append(save);row.append(sku,name,stock,controls);return row;}));}
+document.querySelector('#search').addEventListener('input',render);render();
+</script></body></html>

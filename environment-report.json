@@ -1,0 +1,54 @@
+{
+  "observed_at_local": "2026-09-11",
+  "os": "macOS-26.0-arm64-arm-64bit",
+  "machine": "arm64",
+  "commands": {
+    "hermes": "/Users/example/.local/bin/hermes",
+    "ollama": "/usr/local/bin/ollama",
+    "uv": "/opt/anaconda3/bin/uv",
+    "node": "/Users/example/.local/bin/node",
+    "npm": "/Users/example/.local/bin/npm",
+    "docker": null,
+    "ssh": "/usr/bin/ssh"
+  },
+  "hermes": {
+    "state": "isolated_bridge_protocol_candidate_verified_not_production",
+    "path": "/Users/example/.hermes/hermes-agent",
+    "reported_version": "0.16.0 (2026.6.5)",
+    "commit": "646cd1b43e89920bb283dc11f38463204bcac9db",
+    "existing_configuration_modified": false,
+    "credentials_read": false,
+    "source_export": ".tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db",
+    "protocol_evidence": [
+      "artifacts/hermes-protocol-conformance-reviewed.json",
+      "artifacts/hermes-protocol-fault-conformance.json"
+    ]
+  },
+  "windows": {
+    "state": "unavailable",
+    "evidence": "User reported no currently available Windows test machine. No network discovery performed."
+  },
+  "models": {
+    "endpoint": "http://127.0.0.1:11434",
+    "selected": [
+      "qwen3-vl:2b",
+      "minicpm-v4.6:latest",
+      "glm-ocr:latest"
+    ],
+    "metadata_evidence": "artifacts/local-model-metadata.json"
+  },
+  "plan": {
+    "source": "/Users/example/Downloads/Computer_Use_Agent_Full_Plan_v1.0.md",
+    "copy": "docs/plans/Computer_Use_Agent_Full_Plan_v1.0.md",
+    "sha256": "2e974b94579ef078d8d0931bfbaa333b862ac4c8d64246b6e8c4026414c9005c"
+  },
+  "release_gate_status": "not_passed",
+  "memory_bytes": 17179869184,
+  "independent_input": {
+    "browser_headless": "real_pointer_events_and_http_live_preview_verified",
+    "browser_evidence": "artifacts/workspace-live-preview-proof-run2/report.json",
+    "desktop": "disabled_pending_independent_input_certification",
+    "desktop_evidence": "docs/cua-audit.md",
+    "physical_foreground_tests": "paused_by_user_requirement"
+  }
+}

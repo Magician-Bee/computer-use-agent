@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>活動報名</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><div><div class="brand">WORKSPACE / PEOPLE</div><h1>活動報名</h1></div><span class="pill">團隊交流日</span></header>
+<main><p>填寫參與者資料與活動偏好，送出後即可看到報名摘要。</p>
+<form id="registration"><div class="grid">
+<label>姓名<input name="name" required autocomplete="off"></label>
+<label>Email<input name="email" type="email" required autocomplete="off"></label>
+<label>部門<select name="department"><option value="engineering">工程</option><option value="design">設計</option><option value="operations">營運</option></select></label>
+<label>座位偏好<select name="seat"><option value="aisle">靠走道</option><option value="window">靠窗</option><option value="any">皆可</option></select></label>
+</div><label class="check"><input type="checkbox" name="snack">需要茶點</label>
+<button type="submit">送出報名</button></form><div role="status" id="status"></div></main>
+<script>
+document.querySelector('#registration').addEventListener('submit',event=>{
+ event.preventDefault();const data=new FormData(event.target);
+ const entry={name:data.get('name'),email:data.get('email'),department:data.get('department'),seat:data.get('seat'),snack:data.get('snack')==='on',submitted:true};
+ localStorage.setItem('bench_profile',JSON.stringify(entry));
+ document.querySelector('#status').textContent=`報名已送出：${entry.name}（${entry.email}）。`;
+});
+</script></body></html>

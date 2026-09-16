@@ -1,0 +1,30 @@
+[project]
+name = "computeruse-agent"
+version = "0.1.0"
+description = "A local, model-agnostic computer-use agent with OCR and optional YOLO-World perception"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.34,<1",
+  "httpx>=0.28,<1",
+  "pydantic>=2.10,<3",
+  "playwright>=1.51,<2",
+  "pillow>=11,<13",
+  "pyautogui>=0.9.54,<1",
+  "pyperclip>=1.9,<2",
+  "pyobjc-framework-Vision>=11; sys_platform == 'darwin'",
+  "pyobjc-framework-Quartz>=11; sys_platform == 'darwin'",
+  "jsonschema>=4,<5",
+  "mcp==1.30.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+    "pytest-asyncio>=0.25,<2",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]

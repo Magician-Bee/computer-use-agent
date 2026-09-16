@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>補貨申請</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><div><div class="brand">WORKSPACE / PURCHASING</div><h1>補貨申請</h1></div><span class="pill">新申請</span></header>
+<main><p>請先確認供應商的配送資訊。<a href="/directory.html" target="_blank">開啟供應商目錄（新分頁）</a></p>
+<form id="order"><div class="grid">
+<label>供應商<input name="supplier" required autocomplete="off"></label>
+<label>配送代碼<input name="code" required autocomplete="off"></label>
+<label>服務窗口 Email<input name="email" type="email" required autocomplete="off"></label>
+<label>數量<input name="quantity" type="number" min="1" required></label>
+</div><div class="actions"><button type="submit">送出申請</button></div></form><div role="status" id="status"></div></main>
+<script>document.querySelector('#order').addEventListener('submit',event=>{event.preventDefault();const data=new FormData(event.target);const entry={supplier:data.get('supplier'),code:data.get('code'),email:data.get('email'),quantity:Number(data.get('quantity')),submitted:true};localStorage.setItem('bench_order',JSON.stringify(entry));document.querySelector('#status').textContent=`申請已送出：${entry.supplier}，數量 ${entry.quantity}。`;});</script></body></html>

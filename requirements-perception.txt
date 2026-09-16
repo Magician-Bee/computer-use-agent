@@ -1,0 +1,6 @@
+# Optional object detection; base macOS OCR is installed via requirements.txt.
+ultralytics>=8.3,<9
+
+# Offline OCR fallback for Windows/Linux (also usable on macOS).
+# The 1.x package bundles ONNX model files and has a stable tuple output API.
+rapidocr-onnxruntime>=1.3,<2
