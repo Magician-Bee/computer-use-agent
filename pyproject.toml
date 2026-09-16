@@ -1,4 +1,6 @@
 [project]
+license = "MIT"
+readme = "README.md"
 name = "computeruse-agent"
 version = "0.1.0"
 description = "A local, model-agnostic computer-use agent with OCR and optional YOLO-World perception"

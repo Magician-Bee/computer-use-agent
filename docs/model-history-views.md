@@ -39,7 +39,7 @@ benchmark 結束時由新開的 SQLite 連線逐份讀回並還原。`context_vi
 
 純 codec 的 74 項測試通過，未呼叫模型。先前 v2-run2 的八份歷史請求在離線轉換後皆可精確還原；Qwen 最後一輪為 61,367→51,809 字元，MiniCPM 為 21,662→14,848 字元。這是輸入大小測量，不是 token、速度或任務成功率結果；歷史來源 hash 的離線釘選也不是新父程序執行權限證據。可用 `.venv/bin/python -m pytest tests/test_context_projection.py -q -s -k saved_real_v2_requests --tb=short` 重做。
 
-[真 Hermes 接合報告](../artifacts/hermes-lossless-real-browser-protocol-v3/protocol-proof.json)記錄兩次假模型回覆、一次額外觀察、零真模型推理及零輸入操作。每次 adapter 呼叫前，另一個 SQLite 連線已能讀到提交的原文／輸入版本／事件；來源 pin 與真正父程序回覆相符，模型端實際收到引用，最新內容保持逐字相同。此測試的感知文字另加明確的合成診斷資料以確保有可去重內容，13,713→9,100 字元不能當成真模型任務效能。原任務仍失敗，資源已清理。
+真 Hermes 接合報告（local-only evidence; not included: `artifacts/hermes-lossless-real-browser-protocol-v3/protocol-proof.json`）記錄兩次假模型回覆、一次額外觀察、零真模型推理及零輸入操作。每次 adapter 呼叫前，另一個 SQLite 連線已能讀到提交的原文／輸入版本／事件；來源 pin 與真正父程序回覆相符，模型端實際收到引用，最新內容保持逐字相同。此測試的感知文字另加明確的合成診斷資料以確保有可去重內容，13,713→9,100 字元不能當成真模型任務效能。原任務仍失敗，資源已清理。
 
 [ModelViewSession 測試](../tests/test_model_views.py)最終 73 項通過，包含 v3→v4 資料保留遷移、範圍／額度、第二連線暫停／停止 CAS、交易回滾及損壞資料拒絕。這些測試只使用假 adapter，不能取代真模型任務評估。
 

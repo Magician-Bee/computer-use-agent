@@ -20,7 +20,7 @@
 
 Pinned Hermes 的 `interrupt()` 可由另一執行緒呼叫；conversation loop 會檢查 interrupt，正常返回的結果包含 `messages`。目前 worker 只輸出 final、usage、interrupted 等欄位，丟掉完整 history。
 
-來源：[run_agent.py:2333](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/run_agent.py#L2333)、[conversation_loop.py:567](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/conversation_loop.py#L567)、[turn_finalizer.py:325](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/turn_finalizer.py#L325)、[scripts/hermes_worker.py:219](../scripts/hermes_worker.py#L219)。
+來源：run_agent.py:2333（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/run_agent.py`）、conversation_loop.py:567（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/conversation_loop.py`）、turn_finalizer.py:325（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/turn_finalizer.py`）、[scripts/hermes_worker.py:219](../scripts/hermes_worker.py#L219)。
 
 **必要修改：** worker 返回獨立的 `paused` 訊息，包含完整 `messages`、conversation identity、turn generation、最後工具 sequence、history hash 與訊息計數。父程序驗證並保存後才 ACK。只有一次已完成的 `run_conversation()` 所返回的穩定資料能作為這次協作式暫停的 checkpoint；不可在另一執行緒任意讀取仍在變動的內部 messages，便宣稱 history 完整。
 
@@ -36,7 +36,7 @@ Pinned Hermes 的 `interrupt()` 可由另一執行緒呼叫；conversation loop 
 
 Pause 控制執行緒呼叫 `agent.interrupt()`；正在等待父程序 reply 的工具不能只靠這個旗標解除阻塞。父程序須在 durable pause 與輸入排空後，回覆該 sequence 的真實結果：已知 receipt、已確認未執行，或 `outcome_unknown`。不得把可能已發生的輸入一律寫成 `executed:false`。Gateway suspend 取消 child task 時，Bridge 要能區分這是受控暫停，避免 child `CancelledError` 直接傳出並執行 `run()` 的 terminal `finally`。
 
-Hermes 在收到 interrupt 後會為未開始的後續工具補上 skipped tool result，這些是中斷記錄，不能解讀為輸入成功：[tool_executor.py:770](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/tool_executor.py#L770)。工具呼叫與結果的配對必須完整保留。
+Hermes 在收到 interrupt 後會為未開始的後續工具補上 skipped tool result，這些是中斷記錄，不能解讀為輸入成功：tool_executor.py:770（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/tool_executor.py`）。工具呼叫與結果的配對必須完整保留。
 
 ## 父程序的順序與協定狀態
 
@@ -56,12 +56,12 @@ Gateway 現有順序與恢復要求見 [server/core/gateway.py:312](../server/co
 
 恢復要更新 ComputerTools 所持有的 lease、frame、model view 及當前 schema；只在 Gateway 取得新 frame，卻讓 facade 留著舊資料，仍會造成 stale proposal：[server/core/computer_tools.py:101](../server/core/computer_tools.py#L101)、[server/core/computer_tools.py:191](../server/core/computer_tools.py#L191)。
 
-將完整 `messages` 作為下一次 `conversation_history`，但不要再次把原始 task 當新 user message。Pinned Hermes 每次都會 append 一個 user turn：[turn_context.py:221](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/turn_context.py#L221)。恢復訊息必須對應實際使用者的恢復操作，記錄其來源；新觀察以明確的父程序讀取結果提供，不可冒充新的使用者指令。原始任務字串保持原樣。
+將完整 `messages` 作為下一次 `conversation_history`，但不要再次把原始 task 當新 user message。Pinned Hermes 每次都會 append 一個 user turn：turn_context.py:221（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/turn_context.py`）。恢復訊息必須對應實際使用者的恢復操作，記錄其來源；新觀察以明確的父程序讀取結果提供，不可冒充新的使用者指令。原始任務字串保持原樣。
 
 ## 必須封住的競態
 
 1. **Gateway 已取消輸入，但 Bridge 將取消當成 Stop。** 需有受控 pause 分支及對應工具 reply，不能讓現有 `finally close()` 關掉瀏覽器。
-2. **收到 `interrupted:true`，舊 inference 仍在執行。** Hermes 的 API daemon thread 可能超過 turn 的生命週期；中斷會關閉 request-local transport，但不是所有底層工作已退出的證據：[chat_completion_helpers.py:142](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/chat_completion_helpers.py#L142)、[chat_completion_helpers.py:528](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/chat_completion_helpers.py#L528)。父程序 endpoint 需新增非終止的 admission gate 與 cancel／drain 入口，等待 active request 清空後才可 resume。現有 close 是永久性的：[server/model_server.py:318](../server/model_server.py#L318)。取消 HTTP 不等於已證明 Ollama 底層推理立即停止，兩者要分別記錄。
+2. **收到 `interrupted:true`，舊 inference 仍在執行。** Hermes 的 API daemon thread 可能超過 turn 的生命週期；中斷會關閉 request-local transport，但不是所有底層工作已退出的證據：chat_completion_helpers.py:142（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/chat_completion_helpers.py`）、chat_completion_helpers.py:528（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/chat_completion_helpers.py`）。父程序 endpoint 需新增非終止的 admission gate 與 cancel／drain 入口，等待 active request 清空後才可 resume。現有 close 是永久性的：[server/model_server.py:318](../server/model_server.py#L318)。取消 HTTP 不等於已證明 Ollama 底層推理立即停止，兩者要分別記錄。
 3. **兩個 resume 或重建兩個 Bridge 產生兩個 planner。** 每 task 的 supervisor lock／generation 必須涵蓋 worker 建立、turn 開始、pause ACK、resume 與終止。現有 endpoint `_busy` 只限制同一個 endpoint，不能保護另一個新建 endpoint：[server/model_server.py:206](../server/model_server.py#L206)。上一 turn 未返回且請求未排空時，不得呼叫第二次 `run_conversation()`。
 4. **Stop 與 pause／resume 同時到達。** Stop 是不可逆決定，撤銷 generation 與模型 admission；每個 await 回來後重新檢查。晚到的 checkpoint 或 ACK 可作記錄，不能轉成可恢復授權。現有 Gateway 對同 revision 的 pause／Stop 競爭已有有限處理，不代表跨程序 planner lifecycle 也已處理：[server/core/gateway.py:396](../server/core/gateway.py#L396)。
 5. **舊模型輸出或未確定的工具被重送。** 舊 generation 的輸出不能取得新 frame／lease；pending effect 不得以換 action ID 的方式重播。必須先讀回及對帳，然後重新觀察、重新提出動作。
@@ -69,9 +69,9 @@ Gateway 現有順序與恢復要求見 [server/core/gateway.py:312](../server/co
 
 ## 累積預算與推理 admission
 
-Pinned Hermes 每次 `run_conversation()` 都建立新的 iteration budget：[turn_context.py:166](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/turn_context.py#L166)。若每次 resume 都給原上限，使用者就能藉暫停／恢復重置總預算。父程序須持續累計已使用與未知的推理、tokens、費用及執行預算，只將剩餘額度交給下一 turn；未知 usage 不能算成零。
+Pinned Hermes 每次 `run_conversation()` 都建立新的 iteration budget：turn_context.py:166（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/turn_context.py`）。若每次 resume 都給原上限，使用者就能藉暫停／恢復重置總預算。父程序須持續累計已使用與未知的推理、tokens、費用及執行預算，只將剩餘額度交給下一 turn；未知 usage 不能算成零。
 
-另外，finalizer 在 iteration budget 耗盡時可能呼叫模型產生摘要，條件本身沒有排除 interrupted：[turn_finalizer.py:53](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/turn_finalizer.py#L53)。所以不能只依賴 worker 的 interrupt 旗標保證「暫停後不再推理」；父程序的 admission 必須在暫停時拒絕任何新請求，包括摘要、retry 和已排程但尚未轉發的請求。現有 request preparation／disconnect cancellation 可作整合起點，但不是已完成的 pause gate：[server/model_server.py:213](../server/model_server.py#L213)、[server/model_server.py:247](../server/model_server.py#L247)。
+另外，finalizer 在 iteration budget 耗盡時可能呼叫模型產生摘要，條件本身沒有排除 interrupted：turn_finalizer.py:53（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/turn_finalizer.py`）。所以不能只依賴 worker 的 interrupt 旗標保證「暫停後不再推理」；父程序的 admission 必須在暫停時拒絕任何新請求，包括摘要、retry 和已排程但尚未轉發的請求。現有 request preparation／disconnect cancellation 可作整合起點，但不是已完成的 pause gate：[server/model_server.py:213](../server/model_server.py#L213)、[server/model_server.py:247](../server/model_server.py#L247)。
 
 是否將人為暫停時間計入 wall-clock deadline，須由父程序政策明訂並保存；不能因建立新 turn 就偷偷延長任務期限。
 

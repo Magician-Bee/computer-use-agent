@@ -10,7 +10,7 @@
 
 [環境報告](environment-report.json) 發現 Hermes 0.16.0（commit `646cd1b43e89920bb283dc11f38463204bcac9db`）與三個本機 Ollama 模型；隔離 bridge 已接候選 TaskStore／Policy／Gateway，腳本真動作與真 Qwen 失敗證據分列，尚未接管正式工作台。使用者目前沒有可用 Windows 測試機。這是 Windows UIA、記事本及遠端驗收的真實外部阻塞，不是刪除 Windows 範圍的理由。
 
-[v1 Qwen 原 profile](artifacts/hermes-model-profile-qwen-v1/qwen3-vl-2b-profile/report.json) 為 **0/1**：18 次 planner 推理嘗試、0 admitted action、429.067 秒。[v2 首輪兩案](artifacts/hermes-model-profile-v2/summary.json)各完成一次實際 GLM-OCR transform，卻因 bootstrap validator 不相容在推理前中止，應計 **2 次 preflight failure、0 planner inference**，不是模型品質 0/2。nullable validator 修正後的 [v2-run2 真實 profile 重測](artifacts/hermes-model-profile-v2-run2/summary.json)另行計分，結果為 **0/2**；原啟動失敗、舊 [legacy 0/6 矩陣](artifacts/local-model-matrix-grounded.json)及腳本證據全部保留。
+v1 Qwen 原 profile（local-only evidence; not included: `artifacts/hermes-model-profile-qwen-v1/qwen3-vl-2b-profile/report.json`） 為 **0/1**：18 次 planner 推理嘗試、0 admitted action、429.067 秒。v2 首輪兩案（local-only evidence; not included: `artifacts/hermes-model-profile-v2/summary.json`）各完成一次實際 GLM-OCR transform，卻因 bootstrap validator 不相容在推理前中止，應計 **2 次 preflight failure、0 planner inference**，不是模型品質 0/2。nullable validator 修正後的 v2-run2 真實 profile 重測（local-only evidence; not included: `artifacts/hermes-model-profile-v2-run2/summary.json`）另行計分，結果為 **0/2**；原啟動失敗、舊 legacy 0/6 矩陣（local-only evidence; not included: `artifacts/local-model-matrix-grounded.json`）及腳本證據全部保留。
 
 v2-run2：Qwen 完成 5 次真動作、6 次 planner 呼叫，422.792 秒逾時；原 oracle 5/6 符合且已送出，但座位為 aisle 而非 window，仍未成功。第 6 次提出 finish，未及處理驗證回饋。MiniCPM 2 次呼叫、0 動作、67.52 秒；先 finish 遭六項全部否決，再回傳文字，Hermes completed=true 仍不能使 Task 成功。兩案 Task 皆 CANCELLED，planner images=0、context=64000 已核對，所屬資源清理完成、來源 hash 不變。這不是新的六案矩陣，inventory／supplier 尚未在此版本計分。
 
@@ -24,7 +24,7 @@ v2-run2：Qwen 完成 5 次真動作、6 次 planner 呼叫，422.792 秒逾時�
 - 獨立 browser context、可受控應用程式背景介面、隔離桌面／VM 或已配對遠端互動工作階段可分別評估；每條路線要測輸入隔離、資料範圍、停止與可見真實結果。
 - 驗收須同時讓使用者在另一測試應用程式移動實體游標及輸入文字；記錄前景 app、游標位置、兩邊實際收到的輸入，確認沒有競爭／錯送。測試僅在約定的可丟棄環境進行。
 
-瀏覽器局部新增 [10 個 headless 指標測試](tests/test_browser_motion.py)及[實際串流像素證據](artifacts/browser-live-preview-proof/report.json)：連續 page.mouse 事件、真實 click 與獨立監看畫面。這不涵蓋一般桌面／Windows，亦未完成双方同時鍵盤輸入的 BG-01–BG-06。
+瀏覽器局部新增 [10 個 headless 指標測試](tests/test_browser_motion.py)及實際串流像素證據（local-only evidence; not included: `artifacts/browser-live-preview-proof/report.json`）：連續 page.mouse 事件、真實 click 與獨立監看畫面。這不涵蓋一般桌面／Windows，亦未完成双方同時鍵盤輸入的 BG-01–BG-06。
 
 目前 [server/motion.py](server/motion.py) 的軌跡 helper 及舊全域輸入成功紀錄均不授予此修訂通過。新 [Cua 候選接頭](server/cua_driver.py) 與 [背景能力閘](server/background.py) 保持 available=false；沒有通過互不干擾與連續 Agent 指標驗收，也不回退全域輸入。完成後需以 [ACCEPTANCE](ACCEPTANCE.md) 的新增測試核對。
 
@@ -36,11 +36,11 @@ v2-run2：Qwen 完成 5 次真動作、6 次 planner 呼叫，422.792 秒逾時�
 
 版本化 Task、Step、ActionEnvelope、ObservationRef、Evidence、Approval、ResourceLease、Event、Checkpoint 與 ToolManifest 已於候選核心建立，Action 沿用既有定義。候選 Gateway 已把任務／觀察版本、範圍、精確核準、租約、持久 journal 與輸入前 guard 接至真實 headless driver；目前 SQLite schema v4 保留 policy digest／checkpoint 核對，從 v2／v3 以新增資料表的遷移保留任務、政策與事件。父程序模型歷史也存在同一份 TaskStore。下一步是切換唯一正式執行出口；不是增設第二份執行狀態。候選 Stop 先撤銷資料庫權限再取消及清理輸入，Planner 的 done 只提出候選；正式 Run 的獨立終態裁決尚待整合。
 
-[Hermes／核心 reviewed run2](artifacts/hermes-browser-core-proof-reviewed-run2/report.json)在 3.755 秒完成，由父程序獨立讀回繁中文字與一次儲存再提交 verdict，DB reopen 保留 SUCCEEDED；6 次腳本 API、2 次真動作、60 個 pointermove／983.1ms，AI 呼叫 0，Hermes 結束已清理所屬 browser。[最初報告](artifacts/hermes-browser-core-proof/report.json)早於 policy pin／局部影像補強；[reviewed 首輪失敗](artifacts/hermes-browser-core-proof-reviewed/report.json)保留清理後讀已關閉頁面的 harness 錯誤，修正後另建 run2。原本純 IPC 證據仍為 0 次真實電腦動作，不能與此整合混計。
+Hermes／核心 reviewed run2（local-only evidence; not included: `artifacts/hermes-browser-core-proof-reviewed-run2/report.json`）在 3.755 秒完成，由父程序獨立讀回繁中文字與一次儲存再提交 verdict，DB reopen 保留 SUCCEEDED；6 次腳本 API、2 次真動作、60 個 pointermove／983.1ms，AI 呼叫 0，Hermes 結束已清理所屬 browser。最初報告（local-only evidence; not included: `artifacts/hermes-browser-core-proof/report.json`）早於 policy pin／局部影像補強；reviewed 首輪失敗（local-only evidence; not included: `artifacts/hermes-browser-core-proof-reviewed/report.json`）保留清理後讀已關閉頁面的 harness 錯誤，修正後另建 run2。原本純 IPC 證據仍為 0 次真實電腦動作，不能與此整合混計。
 
 回歸按版本分列：較早 509 passed／1 skipped 與後加 2 個 focused tests 保留為舊紀錄；[E28](docs/hermes-model-runtime.md) 的 v1 完整 suite 為 **699 passed、1 skipped、3 warnings，92.40 秒**，另有 **15 個 runner regression** 通過。v2 較早的 **310 focused tests／52.46 秒**只代表指定範圍；最新另跑的 v2 全量 suite 為 **801 passed、1 skipped、3 warnings，107.10 秒**。全量包含原生 OCR fixtures 與真 Hermes／fake HTTP，沒有真模型推理，live GLM 為 opt-in skip。這些數字不能相加，也不能取代真模型結果或固定 release 驗收。
 
-Bootstrap 修正後另有 bridge＋runner **118 個局部回歸**與[真 browser／真 Hermes bootstrap glue](artifacts/hermes-bootstrap-real-browser-protocol-v2/protocol-proof.json)；後者模型端仍是 fake HTTP、真模型與動作皆為 0。後加 runner 欄位測試及各次耗時在[驗收帳](ACCEPTANCE.md)分列，這些局部證據不代表重測已成功。
+Bootstrap 修正後另有 bridge＋runner **118 個局部回歸**與真 browser／真 Hermes bootstrap glue（local-only evidence; not included: `artifacts/hermes-bootstrap-real-browser-protocol-v2/protocol-proof.json`）；後者模型端仍是 fake HTTP、真模型與動作皆為 0。後加 runner 欄位測試及各次耗時在[驗收帳](ACCEPTANCE.md)分列，這些局部證據不代表重測已成功。
 
 父程序[無損模型歷史投影](docs/model-history-views.md)已實作：只對真正釘選的 ComputerTools 結果建立可還原引用，保留改變／消失的文字、跨頁事實、原 task／限制、call/outcome 配對與最新完整觀察。原訊息、模型輸入版本及還原 manifest 先在同一份 TaskStore 提交，HTTP 接頭另核對除了 messages 以外的欄位不變，才允許一次 adapter 呼叫；沒有第二個摘要模型或 planner。目前僅限明確選用 `diagnostic_fixture`，預設完整歷史；保留額度、損壞資料與暫停／停止競態均有拒絕測試。73 個保存／遷移回歸與真 Hermes／假模型接合證據見該文件；v3 真模型重測尚無完整結果，不宣稱 token、速度或成功率改善。
 

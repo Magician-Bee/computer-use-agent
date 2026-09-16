@@ -6,9 +6,9 @@
 
 ## 已確認的依據
 
-固定来源 manifest 的 tree SHA256 是 `e2b7f2d5c1ea50813d59426755ce0c801cf84c9605ab35fe2be905d13d65e4d4`。[manifest](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db.json) 記錄 `user_profile_copied=false` 與 `source_modified=false`；目前 [verify_source](../server/hermes_bridge.py) 核對所有追蹤檔案，新增未列名檔案或更動原始碼都會被拒絕。
+固定来源 manifest 的 tree SHA256 是 `e2b7f2d5c1ea50813d59426755ce0c801cf84c9605ab35fe2be905d13d65e4d4`。manifest（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db.json`） 記錄 `user_profile_copied=false` 與 `source_modified=false`；目前 [verify_source](../server/hermes_bridge.py) 核對所有追蹤檔案，新增未列名檔案或更動原始碼都會被拒絕。
 
-既有 [真模型協定 probe](../artifacts/hermes-model-protocol-probe.json) 記錄 Qwen `qwen3-vl:2b`、實際請求 `num_ctx=64000`、`prompt_eval_count=452`，以及相符 `/api/ps` 項目的 `context_length=64000`、`size_vram=8942245640` bytes，約 **8.94 GB／8.33 GiB**。這是該次載入總量，不能全部算成 KV cache，也沒有比較不同 context 的對照組。這份證據是協定 probe，不能代替完整任務通過率。
+既有 真模型協定 probe（local-only evidence; not included: `artifacts/hermes-model-protocol-probe.json`） 記錄 Qwen `qwen3-vl:2b`、實際請求 `num_ctx=64000`、`prompt_eval_count=452`，以及相符 `/api/ps` 項目的 `context_length=64000`、`size_vram=8942245640` bytes，約 **8.94 GB／8.33 GiB**。這是該次載入總量，不能全部算成 KV cache，也沒有比較不同 context 的對照組。這份證據是協定 probe，不能代替完整任務通過率。
 
 | 層次 | 固定來源位置 | 實际行為與影響 |
 |---|---|---|
@@ -21,12 +21,12 @@
 | 關閉自動壓縮 | `agent/turn_context.py:250–315`；`agent/conversation_loop.py:2649–2704,4047` | 預檢、回應後觸發及已分類的 context overflow 恢復都有 `compression_enabled` guard。關閉時 overflow 應明確失敗，不應自動摘要／另開模型呼叫。 |
 | 現有 project 邊界 | [bridge](../server/hermes_bridge.py)、[worker](../scripts/hermes_worker.py)、[adapter](../server/ollama_tools.py)、[HTTP 包裝](../server/model_server.py) | bridge／adapter 限制至少 64k；bridge 私有 profile 設定 context 並關閉壓縮；HTTP metadata 與 adapter `num_ctx` 目前由建構值決定。worker 不提供切模型、fallback、壓縮工具或第二個 planner。 |
 
-上述來源皆位於 [固定 Hermes export](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/)。行號只對此 commit 有效。
+上述來源皆位於 固定 Hermes export（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent`）。行號只對此 commit 有效。
 
 ## 正式 hook 能做什麼
 
 1. **`model.context_length`／custom provider 的 per-model 設定**：正式配置，可忠實表示選定窗口，但無法解除 64k minimum。也不能把模型最大支援值、實際載入窗口和壓縮門檻混為一個數字。
-2. **`context.engine` + `ContextEngine`**：固定版 [context_engine.py](../.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/context_engine.py) 定義 `update_model`、`update_from_response`、`should_compress`、`compress`、生命週期等介面。`agent_init.py:1450–1535` 支援 plugin 選擇，卻在選擇後對所有 engine 執行同一 minimum check。因此它適合未來實作小窗口管理，**單獨使用不能解決啟動門檻**。回傳 `context_length=0` 躲過 `if _ctx` 也不是誠實支援方案。
+2. **`context.engine` + `ContextEngine`**：固定版 context_engine.py（local-only evidence; not included: `.tools/hermes/646cd1b43e89920bb283dc11f38463204bcac9db/agent/context_engine.py`） 定義 `update_model`、`update_from_response`、`should_compress`、`compress`、生命週期等介面。`agent_init.py:1450–1535` 支援 plugin 選擇，卻在選擇後對所有 engine 執行同一 minimum check。因此它適合未來實作小窗口管理，**單獨使用不能解決啟動門檻**。回傳 `context_length=0` 躲過 `if _ctx` 也不是誠實支援方案。
 3. **`pre_llm_call` plugin hook**：`turn_context.py:318–343` 的回傳內容是附加到 user context；hook 異常只記 warning。它不是可靠的阻擋／token admission 介面，不能用來保證超限請求不發送。
 4. **`model.ollama_num_ctx`**：正式設定；若只是把它降到 16k，同時仍對 Hermes 宣稱 64k，會產生不一致，而且原生偵測路徑還有第二個 minimum check。透過 custom adapter 隱藏此差異不符合目標。
 

@@ -1,0 +1,29 @@
+name: Public source validation
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: public-source-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install locked dependencies and browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv /tmp/computeruse-ci-tools
+          /tmp/computeruse-ci-tools/bin/pip install uv
+          /tmp/computeruse-ci-tools/bin/uv sync --frozen --python 3.12
+          npm --prefix frontend ci
+          npm --prefix frontend exec -- playwright install --with-deps chromium
+      - name: Validate public source
+        run: .venv/bin/python scripts/validate_public_release.py

@@ -44,9 +44,9 @@ Driver 回傳僅代表傳輸成功。例外或取消一律保留 outcome_unknown
 
 這個檢查使用真實固定來源 Hermes、真實 SQLite／Policy／Gateway 及 headless Chromium。模型端是明確標示的固定腳本，真實模型呼叫數為 0。Hermes 透過四個工具提出觀察、中文輸入、儲存及完成候選；父程序另讀取 fixture 儲存值與次數，才建立 Evidence／CompletionVerdict。Hermes 的文字結果仍保持 `completion_verified=false`。
 
-[首輪報告](../artifacts/hermes-browser-core-proof/report.json)完成 6 次腳本 API 往返、2 次真實瀏覽器動作；60 個 pointermove，約 980 毫秒；獨立讀回中文正確且儲存一次，重新開啟 DB 後保留 SUCCEEDED。這份首輪證據早於後續 persistent policy pin／局部影像補強，不能代表那些後續變更已測。最新覆蓋以 [gateway 測試](../tests/test_core_gateway.py)、[driver guard 測試](../tests/test_browser_authority.py)、[policy 測試](../tests/test_core_policy.py)及後續 reviewed 報告為準。
+首輪報告（local-only evidence; not included: `artifacts/hermes-browser-core-proof/report.json`）完成 6 次腳本 API 往返、2 次真實瀏覽器動作；60 個 pointermove，約 980 毫秒；獨立讀回中文正確且儲存一次，重新開啟 DB 後保留 SUCCEEDED。這份首輪證據早於後續 persistent policy pin／局部影像補強，不能代表那些後續變更已測。最新覆蓋以 [gateway 測試](../tests/test_core_gateway.py)、[driver guard 測試](../tests/test_browser_authority.py)、[policy 測試](../tests/test_core_policy.py)及後續 reviewed 報告為準。
 
-[補強後的 reviewed run2](../artifacts/hermes-browser-core-proof-reviewed-run2/report.json)在 3.755 秒完成相同鏈路：2 次真實動作、60 個 pointermove／983.1 毫秒，DB 重開後保留獨立裁決的 SUCCEEDED；另確認 Hermes 結束已關閉所屬瀏覽器。先前 [reviewed harness 失敗](../artifacts/hermes-browser-core-proof-reviewed/report.json)保留為 passed=false：報告程式在正確清理後還試圖讀取已關閉頁面，後續將擷取移到 verifier、清理前完成；沒有把失敗報告改成成功。
+補強後的 reviewed run2（local-only evidence; not included: `artifacts/hermes-browser-core-proof-reviewed-run2/report.json`）在 3.755 秒完成相同鏈路：2 次真實動作、60 個 pointermove／983.1 毫秒，DB 重開後保留獨立裁決的 SUCCEEDED；另確認 Hermes 結束已關閉所屬瀏覽器。先前 reviewed harness 失敗（local-only evidence; not included: `artifacts/hermes-browser-core-proof-reviewed/report.json`）保留為 passed=false：報告程式在正確清理後還試圖讀取已關閉頁面，後續將擷取移到 verifier、清理前完成；沒有把失敗報告改成成功。
 
 補強後完整 Python／benchmark 測試為 **509 passed、1 skipped**；skip 是需明確啟用的真實 GLM-OCR 測試，本次沒有因此發送額外模型請求。前端先前 16 項測試與正式 HTTP 工作台 27 項檢查仍各自保留；本次核心測試不能替代正式 UI 切換驗收。
 

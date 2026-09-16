@@ -5,8 +5,8 @@ import { providerNames, type Capabilities, type ModelConfig, type Provider } fro
 
 const defaults: Record<Provider, { base_url: string; model: string }> = {
  openai: { base_url: 'https://api.openai.com/v1', model: '' },
- anthropic: { base_url: 'https://api.anthropic.com', model: '' },
- gemini: { base_url: 'https://generativelanguage.googleapis.com', model: '' },
+ anthropic: { base_url: 'https://api.anthropic.com/v1', model: '' },
+ gemini: { base_url: 'https://generativelanguage.googleapis.com/v1beta', model: '' },
  ollama: { base_url: 'http://127.0.0.1:11434', model: '' },
  custom: { base_url: '', model: '' },
  demo: { base_url: '', model: 'local-demo' },

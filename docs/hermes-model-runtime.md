@@ -128,27 +128,27 @@ Bridge 的取消另外會通知父程序取消／清理 gateway 並關閉子程�
 
 ### v1：Qwen profile，0/1
 
-[v1 summary](../artifacts/hermes-model-profile-qwen-v1/summary.json)與[完整 report](../artifacts/hermes-model-profile-qwen-v1/qwen3-vl-2b-profile/report.json)保留一次原 profile 任務：`qwen3-vl:2b`、DOM＋GLM-OCR、planner images=0。結果為 **0/1**；18 次 planner 推理嘗試、0 admitted action、0 action receipt，總耗時 **429.067 秒**（含逾時清理）。終態 `CANCELLED`，原 oracle 六項均 false，已提交 state 為 null。最後一次推理因逾時取消，其用量未知；前 17 次已回傳用量合計 119373 prompt tokens／1390 completion tokens，不能當成完整總用量。
+v1 summary（local-only evidence; not included: `artifacts/hermes-model-profile-qwen-v1/summary.json`）與完整 report（local-only evidence; not included: `artifacts/hermes-model-profile-qwen-v1/qwen3-vl-2b-profile/report.json`）保留一次原 profile 任務：`qwen3-vl:2b`、DOM＋GLM-OCR、planner images=0。結果為 **0/1**；18 次 planner 推理嘗試、0 admitted action、0 action receipt，總耗時 **429.067 秒**（含逾時清理）。終態 `CANCELLED`，原 oracle 六項均 false，已提交 state 為 null。最後一次推理因逾時取消，其用量未知；前 17 次已回傳用量合計 119373 prompt tokens／1390 completion tokens，不能當成完整總用量。
 
-[原始 inferences](../artifacts/hermes-model-profile-qwen-v1/qwen3-vl-2b-profile/inferences.json)顯示模型先在沒有觀察時提案，之後臆造 scope 之外的 `https://example.test/registration-form`，遭父程序 authority 拒絕；沒有將該網址開成實際動作。接著重複 `computer_finish`，保存的十次驗證都返回未通過。這證明目前回路沒有完成原任務；只可確認本案例未把模型的完成提案誤報為成功，不能當成模型操作能力通過。
+原始 inferences（local-only evidence; not included: `artifacts/hermes-model-profile-qwen-v1/qwen3-vl-2b-profile/inferences.json`）顯示模型先在沒有觀察時提案，之後臆造 scope 之外的 `https://example.test/registration-form`，遭父程序 authority 拒絕；沒有將該網址開成實際動作。接著重複 `computer_finish`，保存的十次驗證都返回未通過。這證明目前回路沒有完成原任務；只可確認本案例未把模型的完成提案誤報為成功，不能當成模型操作能力通過。
 
-v1 首次送往 Ollama 的 system 有 9299 字元，包含預設 Hermes 指引及把特定工具內容標記視為使用者指令的規則。它同時缺少父程序初始觀察；v2 的固定 prompt／bootstrap／結果編碼針對這些具體問題修正，但不能事先推論修正後的成功率。v1 的實際 request 與相符 `/api/ps` 已核對 planner context=64000；此配置通過沒有改變任務失敗結果。舊 [0/6 基線](../artifacts/local-model-matrix-grounded.json)另行保留，不覆寫、不合併成 v2 成績。
+v1 首次送往 Ollama 的 system 有 9299 字元，包含預設 Hermes 指引及把特定工具內容標記視為使用者指令的規則。它同時缺少父程序初始觀察；v2 的固定 prompt／bootstrap／結果編碼針對這些具體問題修正，但不能事先推論修正後的成功率。v1 的實際 request 與相符 `/api/ps` 已核對 planner context=64000；此配置通過沒有改變任務失敗結果。舊 0/6 基線（local-only evidence; not included: `artifacts/local-model-matrix-grounded.json`）另行保留，不覆寫、不合併成 v2 成績。
 
 ### v2 首輪：初始觀察接合失敗
 
-[首輪報告](../artifacts/hermes-model-profile-v2/summary.json)保留兩次啟動失敗：Qwen 設定耗時 11.281 秒、MiniCPM 設定耗時 4.146 秒；每次完成一次 GLM-OCR 感知 transform，但 **planner 推理次數均為 0**，沒有瀏覽器操作。真實 DOM 元素中的 `options`／`selected_options` 可能為 JSON null，原 bootstrap 檢查僅接受 list，因而在 Hermes 啟動前拒絕有效畫面。這是接合錯誤，不能當成兩個模型的品質 0/2。
+首輪報告（local-only evidence; not included: `artifacts/hermes-model-profile-v2/summary.json`）保留兩次啟動失敗：Qwen 設定耗時 11.281 秒、MiniCPM 設定耗時 4.146 秒；每次完成一次 GLM-OCR 感知 transform，但 **planner 推理次數均為 0**，沒有瀏覽器操作。真實 DOM 元素中的 `options`／`selected_options` 可能為 JSON null，原 bootstrap 檢查僅接受 list，因而在 Hermes 啟動前拒絕有效畫面。這是接合錯誤，不能當成兩個模型的品質 0/2。
 
 修正只允許上述兩個選項欄位為 null 或原本嚴格的選項列表，並以真 headless BrowserDriver／ComputerTools 畫面補上邊界測試。後續重跑另建目錄，不覆寫這兩次失敗；未執行的 inventory／supplier 不得推算為通過。
 
 ### v2 修正後重跑：兩個 profile 均未通過
 
-[Qwen report](../artifacts/hermes-model-profile-v2-run2/qwen3-vl-2b-profile/report.json)為相同原 profile／DOM＋GLM-OCR／420 秒時限：5 次 admitted action 均有成功 receipt，0 unknown effect；6 次真 planner 推理，planner images=0。原 oracle 有 5/6 欄位符合，但座位仍為 `aisle`，因此整體 **未通過**。表單確實已送出；不能把其餘正確欄位改算成完整成功。總耗時 422.792 秒含清理，Task 為 CANCELLED，全部所屬資源關閉、來源雜湊不變。第六個回應提出 `computer_finish`，本輪在取得驗證回饋前用完時限；模型摘要所說的靠窗並不符合實際資料。
+Qwen report（local-only evidence; not included: `artifacts/hermes-model-profile-v2-run2/qwen3-vl-2b-profile/report.json`）為相同原 profile／DOM＋GLM-OCR／420 秒時限：5 次 admitted action 均有成功 receipt，0 unknown effect；6 次真 planner 推理，planner images=0。原 oracle 有 5/6 欄位符合，但座位仍為 `aisle`，因此整體 **未通過**。表單確實已送出；不能把其餘正確欄位改算成完整成功。總耗時 422.792 秒含清理，Task 為 CANCELLED，全部所屬資源關閉、來源雜湊不變。第六個回應提出 `computer_finish`，本輪在取得驗證回饋前用完時限；模型摘要所說的靠窗並不符合實際資料。
 
-[實際推理紀錄](../artifacts/hermes-model-profile-v2-run2/qwen3-vl-2b-profile/inferences.json)保留每個 request 的 `truncate=false`、`shift=false`、64000 context 與零影像；結束後相符 `/api/ps` 也確認 64000。六次用量均可得：79404 prompt tokens／332 completion tokens。每輪 prompt 從 4009 增至 22837 tokens，prompt evaluation 從 6.555 增至 75.884 秒；模型載入約 4.275–9.502 秒，11 次感知 transform 合計 113.984 秒（含 quick）。這些是測量值，不是 context 壓縮已改善的證據；GLM 的精確請求次數／token 用量仍未量測。
+實際推理紀錄（local-only evidence; not included: `artifacts/hermes-model-profile-v2-run2/qwen3-vl-2b-profile/inferences.json`）保留每個 request 的 `truncate=false`、`shift=false`、64000 context 與零影像；結束後相符 `/api/ps` 也確認 64000。六次用量均可得：79404 prompt tokens／332 completion tokens。每輪 prompt 從 4009 增至 22837 tokens，prompt evaluation 從 6.555 增至 75.884 秒；模型載入約 4.275–9.502 秒，11 次感知 transform 合計 113.984 秒（含 quick）。這些是測量值，不是 context 壓縮已改善的證據；GLM 的精確請求次數／token 用量仍未量測。
 
-[MiniCPM report](../artifacts/hermes-model-profile-v2-run2/minicpm-v4.6-latest-profile/report.json)耗時 67.520 秒，2 次真 planner 推理、0 browser actions；首回應直接要求驗證，六項均失敗，之後回覆操作說明並退出。Hermes 的 `hermes_completed=true` 只表示對話結束，Task 仍以 CANCELLED 清理，沒有 SUCCEEDED。兩次用量均可得：11297 prompt tokens／103 completion tokens，planner images=0；實際 context=64000 已核對，來源雜湊穩定，全部所屬資源清理。
+MiniCPM report（local-only evidence; not included: `artifacts/hermes-model-profile-v2-run2/minicpm-v4.6-latest-profile/report.json`）耗時 67.520 秒，2 次真 planner 推理、0 browser actions；首回應直接要求驗證，六項均失敗，之後回覆操作說明並退出。Hermes 的 `hermes_completed=true` 只表示對話結束，Task 仍以 CANCELLED 清理，沒有 SUCCEEDED。兩次用量均可得：11297 prompt tokens／103 completion tokens，planner images=0；實際 context=64000 已核對，來源雜湊穩定，全部所屬資源清理。
 
-[這組 summary](../artifacts/hermes-model-profile-v2-run2/summary.json)為 **0/2**，兩個 planner 都是真模型、同一個原 profile＋GLM 感知模式。這組尚未包含 inventory／supplier，不能與舊六案矩陣混成新成功率。v1 失敗與 v2 首輪啟動前錯誤也完整保留。下一步需要改善小模型的持續操作與修正能力，以及保留跨分頁事實的明示歷史去重；目前沒有 context 壓縮已實作或提速的聲明。
+這組 summary（local-only evidence; not included: `artifacts/hermes-model-profile-v2-run2/summary.json`）為 **0/2**，兩個 planner 都是真模型、同一個原 profile＋GLM 感知模式。這組尚未包含 inventory／supplier，不能與舊六案矩陣混成新成功率。v1 失敗與 v2 首輪啟動前錯誤也完整保留。下一步需要改善小模型的持續操作與修正能力，以及保留跨分頁事實的明示歷史去重；目前沒有 context 壓縮已實作或提速的聲明。
 
 ## 回歸與協定證據的範圍
 
@@ -157,11 +157,11 @@ v1 首次送往 Ollama 的 system 有 9299 字元，包含預設 Hermes 指引�
 | v1 版本的測試紀錄 | 699 passed、1 skipped，另有 15 項 runner regression 通過 | v1 對應版本的自動化回歸；不是本次 v2 全量重跑。 |
 | v2 指定回歸組合 | 310 targeted regressions 通過 | bootstrap／prompt、adapter 編碼與請求、ComputerTools 自動觀察／驗證等修正；不是模型任務品質或完整 Gate。參見 [bridge](../tests/test_hermes_bridge.py)、[adapter](../tests/test_ollama_tools.py)、[ComputerTools](../tests/test_computer_tools.py)及[runner](../tests/test_benchmark_hermes.py)測試。 |
 | v2 初始觀察修正後 | bridge＋runner **118 passed，10.67 秒** | runner 使用真正 bootstrap validator；含真 headless DOM＋native OCR 與 noDOM＋native OCR 接合，未呼叫規劃或 OCR 模型。修正前加強的 runner 檢查實際出現 5 failed／11 passed，修正後通過。 |
-| [真瀏覽器全鏈路協定](../artifacts/hermes-bootstrap-real-browser-protocol-v2/protocol-proof.json) | 1 passed，3.49 秒；1 次 fake 模型 HTTP 回覆、0 真模型／0 browser actions | 真 runner→Hermes worker→認證模型端點→adapter；真 facade 初始畫面位於工具歷史、原任務不變、1727 字元 system 精確相符、全部所屬資源清理。感知 transform 亦為無模型替身，原 oracle 仍 false。 |
+| 真瀏覽器全鏈路協定（local-only evidence; not included: `artifacts/hermes-bootstrap-real-browser-protocol-v2/protocol-proof.json`） | 1 passed，3.49 秒；1 次 fake 模型 HTTP 回覆、0 真模型／0 browser actions | 真 runner→Hermes worker→認證模型端點→adapter；真 facade 初始畫面位於工具歷史、原任務不變、1727 字元 system 精確相符、全部所屬資源清理。感知 transform 亦為無模型替身，原 oracle 仍 false。 |
 | v2 最後完整回歸 | **801 passed、1 skipped、3 warnings，107.10 秒** | 命令 `.venv/bin/python -m pytest tests benchmarks/test_benchmarks.py -q --tb=short`；包含真 headless／native OCR fixture 與真 Hermes＋fake HTTP 接合。此 suite 未執行真模型推理；skip 為 opt-in live GLM，三個 warning 為套件棄用提示。不是原規劃的 120 次發行驗收。 |
-| [v3 候選核心完整回歸](../artifacts/candidate-core-v3-regression.json) | **1021 passed、1 skipped、3 warnings，136.31 秒** | 同一完整命令；新增無損投影、同庫保留與準備邊界、SQLite v3→v4 遷移、Gateway 保留瀏覽器的暫停／恢復。真模型推理0，skip仍為opt-in live GLM。正式UI與Hermes continuation未切換。 |
-| [v3 無損歷史協定](../artifacts/hermes-lossless-real-browser-protocol-v3/protocol-proof.json) | 2 次 fake planner completion、1 次额外觀察、0 真模型／0輸入操作 | 真Hermes／headless／endpoint／adapter；第二連線核對每次推理前已提交資料，精確還原、最新畫面未改、原任務仍失敗。感知含合成診斷文字，不能視作真模型速度／成功率改善。 |
-| [真 Hermes bootstrap 協定報告](../artifacts/hermes-bootstrap-protocol-v2.json) | 8 checks 全 true；2 次 fake API completion、1 個模型要求的工具呼叫、1 次獨立 bootstrap；real model calls=0、browser actions=0 | 實際傳出的固定 system 完全相符、觀察未進 system、原 task 保留、history 配對與計數、只轉送預期工具及一次清理。初始觀察也是 synthetic，不能作真 browser 或真模型品質證據。 |
+| v3 候選核心完整回歸（local-only evidence; not included: `artifacts/candidate-core-v3-regression.json`） | **1021 passed、1 skipped、3 warnings，136.31 秒** | 同一完整命令；新增無損投影、同庫保留與準備邊界、SQLite v3→v4 遷移、Gateway 保留瀏覽器的暫停／恢復。真模型推理0，skip仍為opt-in live GLM。正式UI與Hermes continuation未切換。 |
+| v3 無損歷史協定（local-only evidence; not included: `artifacts/hermes-lossless-real-browser-protocol-v3/protocol-proof.json`） | 2 次 fake planner completion、1 次额外觀察、0 真模型／0輸入操作 | 真Hermes／headless／endpoint／adapter；第二連線核對每次推理前已提交資料，精確還原、最新畫面未改、原任務仍失敗。感知含合成診斷文字，不能視作真模型速度／成功率改善。 |
+| 真 Hermes bootstrap 協定報告（local-only evidence; not included: `artifacts/hermes-bootstrap-protocol-v2.json`） | 8 checks 全 true；2 次 fake API completion、1 個模型要求的工具呼叫、1 次獨立 bootstrap；real model calls=0、browser actions=0 | 實際傳出的固定 system 完全相符、觀察未進 system、原 task 保留、history 配對與計數、只轉送預期工具及一次清理。初始觀察也是 synthetic，不能作真 browser 或真模型品質證據。 |
 
 以上數字分屬不同版本與測試範圍，不能相加後宣稱最新全量測試已通過。v2 的 8 項協定檢查也不涵蓋真 context overflow，所有正式 Gate 仍維持未通過。
 
